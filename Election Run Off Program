@@ -1,0 +1,428 @@
+'''
+static void Main(string[] args)
+        {
+            //getting user input on the number of voters and allocated ranking 
+            int voters = 0;
+            int ranks = 0;
+            var masterCandidateList = new List<string>();
+            var votesOriginal = new int[voters, ranks];
+
+            while (true)//while loop will validate voters and ranks
+            {
+                Console.Write("How many voters?: ");
+                voters = NumberValidation();
+
+                Console.Write("How many ranks(choices)?: ");
+                ranks = NumberValidation();
+
+                if (voters >= 2 && voters > ranks)
+                {
+                    break;
+                }
+                else
+                    Console.WriteLine("You need more voters and/or ranks.");
+            }
+            //list names of candidates
+            masterCandidateList = OriginalCandidateList();
+
+            //Result function will take in votes and calculate
+            var finalResult = Result(voters, ranks, masterCandidateList);
+
+            Console.WriteLine();
+            Console.WriteLine("The elected candidate is: ");
+            Console.WriteLine(masterCandidateList[Convert.ToInt32(finalResult) - 1]);
+        }
+        public static int NumberValidation()
+        {
+            var validatedNumber = 0;
+            while (true)
+            {
+                Console.Write("Enter a number: ");
+                var temp = Console.ReadLine();
+                var choiceRanks = new List<string>();
+                var joined = "";
+
+                if (!String.IsNullOrWhiteSpace(temp))
+                {
+                    //while (d < temp.Length) breaks down string to char to make sure each char is valid
+                    var d = 0;
+                    while (d < temp.Length)
+                    {
+                        //skip any white space from the user input
+                        if (Char.IsWhiteSpace(temp[d]))
+                            d++;
+                        //any valid number will be stored to a list (choiceRank)
+                        else if (Char.IsDigit(temp[d]))
+                        {
+                            choiceRanks.Add(temp[d].ToString());
+                            d++;
+                        }
+                        else// cover non digit inputs
+                            d++;
+                    }
+                    //put each char into one string to cover any number bigger than 9
+                    joined = String.Join("", choiceRanks.ToArray());
+                    choiceRanks.Clear();
+                    if (!String.IsNullOrWhiteSpace(joined))
+                    {
+                        if (joined.Length > 9)// allow user enter up 999,999,999 votes
+                        {
+                            Console.WriteLine("The number you entered exceeds the limit.");
+                        }
+                        else
+                        {
+                            validatedNumber = Convert.ToInt32(joined);
+                        }
+                        break;
+                    }
+                    else
+                        Console.WriteLine("Please enter a number.");
+                }
+            }
+            return validatedNumber;
+        }
+        public static List<string> OriginalCandidateList()
+        {
+            var nameList = new List<string>();
+            var letterList = new List<string>();
+            string joined;
+            Console.WriteLine("Please type the candidates' name and press enter key to enter the next one.");
+            Console.WriteLine("Please press 'OK' to finish.");
+            Console.WriteLine();
+            while (true)
+            {
+                Console.Write("Name: ");
+                var firstTemp = Console.ReadLine();
+                var d = 0;
+                if (!String.IsNullOrWhiteSpace(firstTemp))
+                {
+                    var temp = firstTemp.Trim();//trim the beginning and end of white space
+
+                    while (d < temp.Length)
+                    {
+                        if (Char.IsLetter(temp[d]))
+                        {
+                            letterList.Add(temp[d].ToString());
+                            d++;
+                        }
+                        else if (temp[d] == '-' || temp[d] == '\'')//some names have hyphene and apostrophy
+                        {
+                            letterList.Add(temp[d].ToString());
+                            d++;
+                        }
+                        //skip any white space from the user input unless it is only one space
+                        else if (temp[d] == ' ')
+                            if (!Char.IsWhiteSpace(Convert.ToChar(letterList[letterList.Count - 1])))
+                            {
+                                letterList.Add(temp[d].ToString());
+                            }
+                            else
+                                d++;
+
+                        else//covers non letter, excludes hyphens and apostrophies                    
+                            d++;
+                    }
+                }
+                else
+                    continue;
+
+                joined = String.Join("", letterList.ToArray());
+                if (!String.IsNullOrWhiteSpace(joined))
+                    if (joined.ToLower() != "ok" & joined.ToLower() != "o k")
+                    {
+                        if (!nameList.Contains(joined))
+                        {
+                            nameList.Add(joined);
+                            letterList.Clear();
+                        }
+                    }
+                    else
+                        break;
+            }
+            Console.WriteLine();
+            Console.WriteLine("The candidate list is: ");
+            for (var i = 0; i < nameList.Count; i++)
+            {
+                Console.WriteLine("{0}.{1}", i + 1, nameList[i]);
+            }
+            return nameList;
+        }
+        public static string[,] VoteEntry(int voters, int ranks, List<string> candidateList)
+        {
+            var votesEntered = new List<string>();//final vote entry
+            // create and fill selection list for ranking choices with user inputs           
+            var voteArray = new string[voters, ranks];//2D array made from the list(votesEntered)
+            var selection = new List<string>();//this list exists to get rid of duplicates from the same voter
+            var minNum = 0;// administrator can decide minimum candidates number possibly less than ranks
+
+            var joined = "";
+            while (true)
+            {
+                Console.WriteLine();
+                Console.WriteLine("The minimum number of candidates a voter should choose: ");
+                var temp = Console.ReadLine();
+                var choiceRanks = new List<string>();
+
+                if (!String.IsNullOrWhiteSpace(temp))
+                {
+                    //while (d < temp.Length) breaks down string to char to make sure each char is valid
+                    var d = 0;
+                    while (d < temp.Length)
+                    {
+                        //skip any white space from the user input
+                        if (Char.IsWhiteSpace(temp[d]))
+                            d++;
+                        //any valid number will be stored to a list (choiceRank)
+                        else if (Char.IsDigit(temp[d]))
+                        {
+                            choiceRanks.Add(temp[d].ToString());
+                            d++;
+                        }
+                        else// cover non digit inputs
+                            d++;
+                    }
+                    //put each char into one string to cover any number bigger than 9
+                    joined = String.Join("", choiceRanks.ToArray());
+                    choiceRanks.Clear();
+                    if (!String.IsNullOrWhiteSpace(joined))
+                    {
+                        if (joined.Length > 9)// allow user enter up 999,999,999 votes
+                        {
+                            Console.WriteLine("The number you entered exceeds the limit.");
+                        }
+                        else if (Convert.ToInt32(joined) <= ranks)
+                        {
+                            break;
+                        }
+                        else if (Convert.ToInt32(joined) > ranks)
+                            Console.WriteLine("Please enter smaller number.");
+                        else
+                            break;
+                    }
+                    else
+                        Console.WriteLine("Please enter a number.");
+                }
+            }
+            Console.WriteLine();
+            minNum = Convert.ToInt32(joined);
+            Console.WriteLine("Please choose up to {0} candidate(s) represented by numbers.", ranks);
+            //a line for non administorator version
+            //Console.WriteLine("You can enter {0} '0' if you do not have {1} candidates to list.", ranks - minNum, ranks);
+            Console.WriteLine("(e.g. For 1.John Smith, you enter 1).");
+            if (minNum < ranks)
+            {
+                Console.WriteLine("You can enter 0 if the voter did not choose all the preferences within the minimum you set up.");
+            }
+            Console.WriteLine("Please press 'enter key' once to move on to the next vote.");
+            Console.WriteLine();
+            var i = 0;
+            while (i < voters)//i represents each voter
+            {
+                var choiceRanks = new List<string>();
+
+                var j = 0;
+
+                while (j < ranks)
+                {
+                    Console.Write("voter{0}: ", i + 1);
+                    var temp = Console.ReadLine();
+
+                    if (!String.IsNullOrWhiteSpace(temp))
+                    {
+                        //while (d < temp.Length) breaks down string to char to make sure each char is valid
+                        var d = 0;
+                        while (d < temp.Length)
+                        {
+                            //skip any white space from the user input
+                            if (Char.IsWhiteSpace(temp[d]))
+                                d++;
+                            //any valid number will be stored to a list (choiceRank)
+                            else if (Char.IsDigit(temp[d]))
+                            {
+                                choiceRanks.Add(temp[d].ToString());
+                                d++;
+                            }
+                            else// cover non digit inputs
+                                d++;
+                        }
+                        //put each char into one string to cover any number bigger than 9
+                        var joined1 = String.Join("", choiceRanks.ToArray());
+                        choiceRanks.Clear();
+                        if (!String.IsNullOrWhiteSpace(joined1))
+                        {
+                            if (joined1 == "0")
+                            {
+                                if (j != ranks - 1)
+                                {
+                                    Console.WriteLine("Please choose at least {0} candidates.", minNum);
+                                }
+                                else
+                                {
+                                    selection.Add(joined1);
+                                    j++;
+                                }
+                            }
+                            else
+                            {
+                                string a = "The number you entered exceeds the limit.";
+                                if (joined1.Length > 10)
+                                {
+                                    Console.WriteLine(a);
+                                }
+                                else if (Convert.ToInt32(joined1) > Int32.MaxValue)
+                                {
+                                    Console.WriteLine(a);
+                                }
+                                else
+                                {
+                                    for (var k = 0; k < candidateList.Count; k++)
+                                    {
+                                        if (Convert.ToInt32(joined1) == k + 1)
+                                        {
+                                            //the final step to add each value to a list 
+                                            if (!selection.Contains(joined1))
+                                            {
+                                                selection.Add(joined1);
+                                                j++;
+                                                //if statement to see if have enough values(j) stored for each voter(i)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                //move the values from voter(i) to votesEntered => use it for vote counting 
+                foreach (var choice in selection)
+                    votesEntered.Add(choice);
+                //clear selection list, so it can store next voter(i)'s values 
+                selection.Clear();
+                //increment i to end while (j < ranks)
+                i++;
+            }
+            //put original vote list to 2Darray(voteArray)
+            for (var l = 0; l < voters; l++)
+            {
+                var rankReversed = ranks;
+                for (var m = 0; m < ranks; m++)
+                {
+                    voteArray[l, m] = votesEntered[(l + 1) * ranks - rankReversed].ToString();
+                    rankReversed--;
+                }
+            }
+            return voteArray;
+        }
+        public static string Result(int voters, int ranks, List<string> candidateList)
+        {
+            var lostList = new List<string>();
+            string[,] voteArray = new string[voters, ranks];
+            var newVotes = new List<string>();
+            var winner = "";
+            //create dictionary for counting
+            var dict = new Dictionary<string, int>();
+            voteArray = VoteEntry(voters, ranks, candidateList);
+
+            while (true)
+            {
+                //create function take the [0] vote and make a string
+                newVotes = ReCounting(voters, ranks, lostList, voteArray);
+                if (newVotes.Count == 0)
+                {
+                    Console.WriteLine("No candidate got the majority of votes. ");
+                    Console.WriteLine("You need to re-do election or switch to plurality vote.");
+                    break;
+                }
+                //take all the votes in and sort by value
+                foreach (var value in newVotes)
+                {
+                    if (dict.ContainsKey(value))
+                        dict[value]++;
+                    else
+                        dict[value] = 1;
+                }
+                var listValue = new List<int>();
+                var listKey = new List<string>();
+                foreach (KeyValuePair<string, int> candidates in dict.OrderByDescending(key => key.Value))
+                {
+                    listValue.Add(candidates.Value);
+                    listKey.Add(candidates.Key);
+                }
+
+                var topVoteKey = listKey[0];//get the fist key
+                var topVoteValue = listValue[0];
+
+                //if the top vote gets a majority, he or she is a winner: if not, runn off procedure begins
+                if (Convert.ToInt32(topVoteValue) > voters * 1 / 2)
+                {
+                    //Console.WriteLine("The winner is:{0} ", topVoteKey);
+                    winner = topVoteKey;
+                    break;
+                }
+                else
+                {
+                    //delete the candidate(s) who got the least votse and add their names to the lostList               
+                    foreach (KeyValuePair<string, int> entry in dict)
+                    {
+                        if (entry.Value == listValue[listValue.Count - 1])
+                        {
+                            lostList.Add(entry.Key);
+                        }
+                    }
+                }
+                dict.Clear();
+                newVotes.Clear();//start recounting again
+                listValue.Clear();
+                listKey.Clear();
+            }
+            return winner;
+
+        }
+        public static List<string> ReCounting(int voters, int ranks, List<string> lostList, string[,] voteArray)
+        {
+            //Recounting votes while eliminating lost candidates' votes
+            var newVotes = new List<string>();
+            var lostCount = 0;
+            for (var i = 0; i < voters; i++)
+            {
+                lostCount = 0;
+                for (var j = 0; j < ranks; j++)
+                {
+                    if (lostList.Count != 0)//add [i,0] to the newVotes
+                    {
+                        if (!lostList.Contains(voteArray[i, j]))
+                        {
+                            if (lostCount != 0 && lostCount < ranks)
+                            {
+                                if (voteArray[i, j] != "0")
+                                {
+                                    newVotes.Add(voteArray[i, j]);
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                newVotes.Add(voteArray[i, j]);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            lostCount++;
+                        }
+                    }
+                    else//this code covers first round
+                    {
+                        newVotes.Add(voteArray[i, j]);
+                        break;
+                    }
+
+                }
+            }
+            return newVotes;
+        }
+'''
