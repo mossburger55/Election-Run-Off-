@@ -1,6 +1,18 @@
 '''
 static void Main(string[] args)
         {
+            //Intro for the program
+            Console.WriteLine("Welcome to the automatic run-off election system.");
+            var divider = new StringBuilder();
+            divider.Append('=', 30);
+            Console.WriteLine(divider);
+            Console.WriteLine("This program is for administrators to enter the votes cast and calculate the winner.");
+            Console.WriteLine();
+            Console.WriteLine("SET UP");
+            var smallDivider = new StringBuilder();
+            smallDivider.Append('-', 5);
+            Console.WriteLine(smallDivider);
+
             //getting user input on the number of voters and allocated ranking 
             int voters = 0;
             int ranks = 0;
@@ -9,28 +21,42 @@ static void Main(string[] args)
 
             while (true)//while loop will validate voters and ranks
             {
-                Console.Write("How many voters?: ");
+                Console.WriteLine("How many voters cast their ballots in this election? (Enter a numeral from 1 to 999999999.): ");
                 voters = NumberValidation();
-
-                Console.Write("How many ranks(choices)?: ");
+                Console.WriteLine();
+                Console.WriteLine("How many choices did each voter get? (These will be ranked. For example, first choices will be worth more than second choices. Enter a numeral from 1 to 999999999].): ");
                 ranks = NumberValidation();
 
-                if (voters >= 2 && voters > ranks)
+                if (voters >= 2 && ranks > 0)
                 {
-                    break;
+                    if((voters/ranks) >= (Int32.MaxValue/ranks))
+                    {
+                        Console.WriteLine("The choices exceed the maximum value.");
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        break;
+                    }                    
                 }
                 else
+                {
                     Console.WriteLine("You need more voters and/or ranks.");
+                    Console.WriteLine();
+                }                    
             }
             //list names of candidates
             masterCandidateList = OriginalCandidateList();
-
+            Console.WriteLine();
             //Result function will take in votes and calculate
             var finalResult = Result(voters, ranks, masterCandidateList);
-
-            Console.WriteLine();
-            Console.WriteLine("The elected candidate is: ");
-            Console.WriteLine(masterCandidateList[Convert.ToInt32(finalResult) - 1]);
+            if(!String.IsNullOrWhiteSpace(finalResult))
+            {
+                Console.WriteLine();
+                Console.WriteLine("This election's winner is: ");
+                Console.WriteLine(masterCandidateList[Convert.ToInt32(finalResult) - 1]);
+            }
+            
         }
         public static int NumberValidation()
         {
@@ -86,12 +112,13 @@ static void Main(string[] args)
             var nameList = new List<string>();
             var letterList = new List<string>();
             string joined;
-            Console.WriteLine("Please type the candidates' name and press enter key to enter the next one.");
-            Console.WriteLine("Please press 'OK' to finish.");
             Console.WriteLine();
+            Console.WriteLine("Please enter the names of each candidate on the ballot. (Names can only include letters [A - Z, a - z], spaces, hyphens [-], and apostrophes ['].) Once all candidates have been entered, type 'OK' and hit Enter.");
+            Console.WriteLine();
+            var candidateCounter = 1;
             while (true)
             {
-                Console.Write("Name: ");
+                Console.Write("Name of Candidate {0}: ", candidateCounter);              
                 var firstTemp = Console.ReadLine();
                 var d = 0;
                 if (!String.IsNullOrWhiteSpace(firstTemp))
@@ -127,20 +154,24 @@ static void Main(string[] args)
                     continue;
 
                 joined = String.Join("", letterList.ToArray());
+
                 if (!String.IsNullOrWhiteSpace(joined))
+                {
                     if (joined.ToLower() != "ok" & joined.ToLower() != "o k")
                     {
                         if (!nameList.Contains(joined))
                         {
                             nameList.Add(joined);
                             letterList.Clear();
+                            candidateCounter++;
                         }
                     }
                     else
                         break;
+                }                    
             }
             Console.WriteLine();
-            Console.WriteLine("The candidate list is: ");
+            Console.WriteLine("The candidates for this election are: ");
             for (var i = 0; i < nameList.Count; i++)
             {
                 Console.WriteLine("{0}.{1}", i + 1, nameList[i]);
@@ -154,12 +185,16 @@ static void Main(string[] args)
             var voteArray = new string[voters, ranks];//2D array made from the list(votesEntered)
             var selection = new List<string>();//this list exists to get rid of duplicates from the same voter
             var minNum = 0;// administrator can decide minimum candidates number possibly less than ranks
-
             var joined = "";
+            Console.WriteLine("ENTER VOTES");
+            var smallDivider = new StringBuilder();
+            smallDivider.Append('-', 5);
+            Console.WriteLine(smallDivider);
+
             while (true)
             {
                 Console.WriteLine();
-                Console.WriteLine("The minimum number of candidates a voter should choose: ");
+                Console.Write("What is the minimum number of votes that each voter was able to cast? (Enter a numeral from 1 and 999999999.): ");
                 var temp = Console.ReadLine();
                 var choiceRanks = new List<string>();
 
@@ -190,12 +225,23 @@ static void Main(string[] args)
                         {
                             Console.WriteLine("The number you entered exceeds the limit.");
                         }
-                        else if (Convert.ToInt32(joined) <= ranks)
+                        else if(voters / Convert.ToInt32(joined) > Int32.MaxValue/ Convert.ToInt32(joined))
                         {
-                            break;
+                            Console.WriteLine("The minimum cannot exceed the maximum value.");
                         }
+                        else if (Convert.ToInt32(joined) == 0)
+                            Console.WriteLine("The minimum numbre cannot be zero. ");
+                        
                         else if (Convert.ToInt32(joined) > ranks)
                             Console.WriteLine("Please enter smaller number.");
+                        else if (Convert.ToInt32(joined) <= ranks)
+                        {
+                            if(Convert.ToInt32(joined) <= candidateList.Count)
+                            {
+                                break;
+                            }
+                            Console.WriteLine("The minimum cannot exceed the number of candidates.");
+                        }
                         else
                             break;
                     }
@@ -205,26 +251,19 @@ static void Main(string[] args)
             }
             Console.WriteLine();
             minNum = Convert.ToInt32(joined);
-            Console.WriteLine("Please choose up to {0} candidate(s) represented by numbers.", ranks);
-            //a line for non administorator version
-            //Console.WriteLine("You can enter {0} '0' if you do not have {1} candidates to list.", ranks - minNum, ranks);
-            Console.WriteLine("(e.g. For 1.John Smith, you enter 1).");
-            if (minNum < ranks)
-            {
-                Console.WriteLine("You can enter 0 if the voter did not choose all the preferences within the minimum you set up.");
-            }
-            Console.WriteLine("Please press 'enter key' once to move on to the next vote.");
+            Console.WriteLine("Please enter the {0} choices in order from each voter. Enter a numeral (For example, to vote for \"1.John Doe\", please type \"1\" and hit Enter).To enter ballots that submitted less than the maximum number of votes, type \"0\" and hit enter to finish voting. (For example, if a voter only chose 2 candidates out of a maximum of 3, type '0' as the third choice.)", ranks);
+       
             Console.WriteLine();
             var i = 0;
             while (i < voters)//i represents each voter
             {
                 var choiceRanks = new List<string>();
-
+                var zeroCounter = 0;
                 var j = 0;
-
+                var choiceCount = 1;
                 while (j < ranks)
-                {
-                    Console.Write("voter{0}: ", i + 1);
+                {                   
+                    Console.Write("Voter{0}, Choice {1}: ", i + 1, choiceCount);
                     var temp = Console.ReadLine();
 
                     if (!String.IsNullOrWhiteSpace(temp))
@@ -248,19 +287,26 @@ static void Main(string[] args)
                         //put each char into one string to cover any number bigger than 9
                         var joined1 = String.Join("", choiceRanks.ToArray());
                         choiceRanks.Clear();
+                        
+  
                         if (!String.IsNullOrWhiteSpace(joined1))
                         {
                             if (joined1 == "0")
                             {
-                                if (j != ranks - 1)
+                                if(j != 0)
                                 {
-                                    Console.WriteLine("Please choose at least {0} candidates.", minNum);
-                                }
-                                else
-                                {
-                                    selection.Add(joined1);
-                                    j++;
-                                }
+                                    if (zeroCounter > ranks - minNum)
+                                    {
+                                        Console.WriteLine("Please choose at least {0} candidates.", minNum);
+                                    }
+                                    else
+                                    {
+                                        selection.Add(joined1);
+                                        j++;
+                                        zeroCounter++;
+                                        choiceCount++;
+                                    }
+                                }                                
                             }
                             else
                             {
@@ -284,6 +330,7 @@ static void Main(string[] args)
                                             {
                                                 selection.Add(joined1);
                                                 j++;
+                                                choiceCount++;
                                                 //if statement to see if have enough values(j) stored for each voter(i)
                                             }
                                         }
@@ -291,7 +338,14 @@ static void Main(string[] args)
                                 }
                             }
                         }
+                        else
+                        {
+                            Console.WriteLine("Please enter a candidate.");
+                            choiceCount--;
+                        }                           
                     }
+                    else
+                        Console.WriteLine("Please enter a candidate.");
                 }
                 //move the values from voter(i) to votesEntered => use it for vote counting 
                 foreach (var choice in selection)
@@ -425,4 +479,6 @@ static void Main(string[] args)
             }
             return newVotes;
         }
+    }
+}
 '''
