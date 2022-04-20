@@ -1,5 +1,5 @@
 # Election-Run-Off-
-A program to run election run off accommodates up to 999,999,999 votes
+A program to run election run off 
 Welcome to the automatic run-off election system.
 =================================================
 This program is for administrators to enter the votes cast and calculate the winner.
